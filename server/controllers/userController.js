@@ -54,3 +54,34 @@ export const login=async(req,res)=>{
 
     }
 }
+
+//contrller to check if the user is authenticated 
+export const checkAuth=async(req,res)=>{
+    res.status(200).json({
+        success:true,
+        user:req.user, //we are getting the user data from the protectRoute middleware and sending it to the client
+        message:"User is authenticated"
+    })
+}
+
+// controller to update the user profile details
+export const updateProfile=async(req,res)=>{
+    try{
+        const{profilePic,bio,fullName}=req.body
+        const userId=req.user._id //we are getting the user id from the protectRoute middleware
+        let updatedUser;
+        if(!profilePic){
+            updatedUser=await User.findByIdAndUpdate(userId,{fullName,bio},{new:true}) //to update the user details in the database and return the updated user data 
+        } else{
+            const upload=await cloudinary.uploader.upload(profilePic)
+            updatedUser=await User.findByIdAndUpdate(userId,{fullName,bio,profilePic:upload.secure_url},{new:true})
+        }
+        res.status(200).json({
+            success:true,
+            userData:updatedUser,
+            message:"Profile updated successfully"
+        })
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
